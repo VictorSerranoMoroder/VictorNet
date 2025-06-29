@@ -2,21 +2,21 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <tokens/Tensor.hpp>
-#include <tracy/Tracy.hpp>
+#include <core/Tensor.hpp>
+//#include <external/tracy/public/tracy/Tracy.hpp>
 
 extern "C" {
     #define STB_IMAGE_IMPLEMENTATION
-    #include "stb_image/stb_image.h"
+    #include "external/stb_image/stb_image.h"
     #define STB_IMAGE_WRITE_IMPLEMENTATION
-    #include "stb_image/stb_image_write.h"
+    #include "external/stb_image/stb_image_write.h"
 }
 
-namespace src::tokens
+namespace src::core
 {
     Tensor::Tensor(const char* fname)
     {
-        ZoneScopedN("ParseImage");
+        //ZoneScopedN("ParseImage");
         int width{}, height{}, channels{};
         stbi_info(fname, &width, &height, &channels);
         std::uint8_t* data = stbi_load(fname, &width, &height, &channels, composition_type::STBI_rgb);
@@ -44,12 +44,8 @@ namespace src::tokens
     , width_{width}
     , channels_{channels_}
     {
-        // data_ = new float[width_ * height_ * channels_];
-        // // Fill data with image info
-        // for (size_t i = 0; i < width_ * height_ * channels_; ++i) {
-        //     data_[i] = static_cast<float>(data[i]);
-        // }       
-        // delete (data);
+        data_ = std::unique_ptr<std::uint8_t[]>{new std::uint8_t[get_value_count()]};
+        std::memcpy(data_.get(), data, get_value_count());
     }
 
     Tensor::Tensor(const Tensor& r)
@@ -100,7 +96,7 @@ namespace src::tokens
 
     void Tensor::print_to_image(const char* fname) const
     {
-        ZoneScopedN("Print");
+        //ZoneScopedN("Print");
         if (data_ != nullptr)
         {
             auto d = reinterpret_cast<std::uint8_t*>(data_.get());
@@ -114,25 +110,25 @@ namespace src::tokens
 
     std::uint8_t* Tensor::get_data() 
     {
-        return data_.get();
+        return data_.release();
     }
 
-    std::uint32_t Tensor::get_value_count()
+    std::uint32_t Tensor::get_value_count() const
     {
         return channels_ * width_ * height_;    
     }
 
-    std::uint32_t Tensor::get_width()
+    std::uint32_t Tensor::get_width() const
     {
         return width_;
     }
 
-    std::uint32_t Tensor::get_height()
+    std::uint32_t Tensor::get_height() const
     {
         return height_;
     }
 
-    std::uint32_t Tensor::get_channels()
+    std::uint32_t Tensor::get_channels() const
     {
         return channels_;
     }

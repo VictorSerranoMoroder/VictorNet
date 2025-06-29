@@ -1,17 +1,42 @@
-cmake_minimum_required(VERSION 3.16)
-project(VictorNet LANGUAGES CXX)
-#project(VictorNet LANGUAGES CXX CUDA)
+cmake_minimum_required(VERSION 3.18)
+project(VictorNet LANGUAGES CXX CUDA)
 
+# Set C++ and CUDA standards
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(src/external/tracy)
+set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
+enable_language(CUDA)
 
-add_executable(VictorNet 
-    src/MainApplication.cpp
-    src/tokens/Tensor.cpp
-    )
-target_include_directories(VictorNet PRIVATE src/)
-target_link_libraries(VictorNet PRIVATE TracyClient)
-target_compile_definitions(VictorNet PRIVATE TRACY_ENABLE)
+# Sources
+set(SOURCES
+    src/MainApplication.cu       # Your main app
+    src/core/device/CudaTensor.cpp # CudaTensor implementation (inherits from CudaObject header-only)
+    src/core/Tensor.cpp           # Other CPP sources if any
+    src/kernels/Conv3D.cu
+)
+set(CMAKE_CUDA_ARCHITECTURES 80)
+
+find_package(CUDA REQUIRED)
+
+add_executable(VictorNet ${SOURCES})
+
+# Enable separable compilation for CUDA
+set_target_properties(VictorNet PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+)
+
+# Include directories
+target_include_directories(VictorNet PRIVATE
+    ${CUDA_INCLUDE_DIRS}
+    src
+)
+
+# Link libraries if needed (e.g., TracyClient, CUDA libraries are linked automatically)
+#target_link_libraries(VictorNet PRIVATE TracyClient)
+
+# Add compile definitions if needed
+#target_compile_definitions(VictorNet PRIVATE TRACY_ENABLE)
+

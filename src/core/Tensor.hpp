@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace src::tokens
+namespace src::core
 {
     /// @brief
     constexpr std::uint32_t RGB_CHANNELS = 3;
@@ -63,22 +63,22 @@ namespace src::tokens
         /// @brief Getter function for tensor value count
         ///
         /// @return     Number of elements that form the tensor
-        std::uint32_t get_value_count();
+        std::uint32_t get_value_count() const;
 
         /// @brief Getter function of width
         ///
         /// @return     width value
-        std::uint32_t get_width();
+        std::uint32_t get_width() const;
 
         /// @brief Getter function of height
         ///
         /// @return     height value
-        std::uint32_t get_height();
+        std::uint32_t get_height() const ;
 
         /// @brief Getter function of channels
         ///
         /// @return     channel value
-        std::uint32_t get_channels();
+        std::uint32_t get_channels() const;
 
         private:
 
