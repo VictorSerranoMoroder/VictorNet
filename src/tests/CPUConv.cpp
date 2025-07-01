@@ -7,7 +7,7 @@
 #include <iostream>
 #include <kernels/Conv3D.hpp>
 
-int test_conv_cpu()
+int main()
 {
     std::uint8_t input[5 * 5 * 3] = {
         // Row 0
@@ -84,46 +84,6 @@ int test_conv_cpu()
             }
         }
     }
-
-    return 0;
-}
-
-
-int main()
-{
-    src::core::Tensor tensor_in{"/workspaces/VictorNet/data/toyota-corolla.jpg"};
-
-    std::uint8_t val_kernel[3 * 3 * 3] = {
-        // Row 0
-        0, 0, 0,   1, 1, 1,   0, 0, 0,
-        // Row 1
-        1, 1, 1,   5, 5, 5,   1, 1, 1,
-        // Row 2
-        0, 0, 0,   1, 1, 1,   0, 0, 0
-    };
-    src::core::Tensor tensor_kernel{val_kernel,3,3,3};
-    src::core::device::CudaTensor cu_in{tensor_in};
-    src::core::device::CudaTensor cu_k{tensor_kernel};
-    src::kernels::ConvolutionScalarData scalar{
-        tensor_in.get_height(),
-        tensor_in.get_width(),
-        3,
-        3,
-        1,
-        1,
-        0
-    };
-    src::core::device::CudaTensor cu_res{static_cast<uint32_t>(scalar.get_output_dim()*scalar.get_output_dim()*3)};
-
-    src::kernels::launch_conv3d_kernel(
-        cu_in,
-        cu_res,
-        cu_k,
-        scalar
-    );
-
-    src::core::Tensor res{cu_res.get_data(),static_cast<uint32_t>(scalar.get_output_dim()), static_cast<uint32_t>(scalar.get_output_dim())};
-    res.print_to_image("output.jpg");
 
     return 0;
 }

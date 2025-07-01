@@ -110,7 +110,7 @@ namespace src::core
 
     std::uint8_t* Tensor::get_data() 
     {
-        return data_.release();
+        return data_.get();
     }
 
     std::uint32_t Tensor::get_value_count() const

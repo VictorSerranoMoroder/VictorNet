@@ -33,8 +33,8 @@ namespace src::core::device
     
         ~CudaObject()
         {
-            //delete[] host_data_;
-            //cudaFree(device_data_);
+            delete[] host_data_;
+            cudaFree(device_data_);
         }
     
         // Not Copyable
@@ -57,12 +57,27 @@ namespace src::core::device
     
         __host__ void sync_to_device() 
         {
-            safe_cudaMemcpy(device_data_, host_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::HostToDevice);
+            if (device_data_)
+            {
+                safe_cudaMemcpy(device_data_, host_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::HostToDevice);
+            }
+            else 
+            {
+                allocate_device_memory(static_cast<TClass*>(this)->get_size());
+            }
         }
     
         __host__ void sync_to_host() 
         {
-            safe_cudaMemcpy(host_data_, device_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::DeviceToHost);
+            if (host_data_)
+            {
+                safe_cudaMemcpy(host_data_, device_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::DeviceToHost);
+            }
+            else 
+            {
+                host_data_ = new TData[static_cast<TClass*>(this)->get_count()];
+                safe_cudaMemcpy(host_data_, device_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::DeviceToHost);
+            }
         }
     
         protected:
@@ -95,10 +110,12 @@ namespace src::core::device
             cudaError_t err{};
             if (type == MemcpyType::HostToDevice)
             {
+                std::cout << "cudaMemcpyHostToDevice" << std::endl;
                 err = cudaMemcpy(dest, orig, size, cudaMemcpyHostToDevice);
             }
             else 
             {
+                std::cout << "cudaMemcpyDeviceToHost" << std::endl;
                 err = cudaMemcpy(dest, orig, size, cudaMemcpyDeviceToHost);
             }
 
@@ -111,6 +128,7 @@ namespace src::core::device
         void safe_cudaMalloc(std::uint32_t size)
         {
             cudaError_t err{};
+            std::cout << "cudaMalloc" << std::endl;
             err = cudaMalloc(&device_data_, size);
             if (err != cudaSuccess) {
                 std::cerr << "cudaMalloc failed: " << cudaGetErrorString(err) << "\n";

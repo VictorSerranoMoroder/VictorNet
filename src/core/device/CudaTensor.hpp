@@ -11,14 +11,6 @@ namespace src::core::device
     {
         public:
     
-        struct ScalarData {
-            std::uint32_t input_x;     // input width
-            std::uint32_t input_y;     // input height
-            std::uint32_t kernel_dim;  // kernel size (assumes square)
-            std::uint32_t channels;    // number of channels
-            std::uint32_t stride;      // number of indexes the kernel moves per step
-        };
-    
         CudaTensor(std::uint32_t count);
         CudaTensor(std::uint8_t* values, std::uint32_t c, std::uint32_t x, std::uint32_t y);
         CudaTensor(core::Tensor& host_tensor);
