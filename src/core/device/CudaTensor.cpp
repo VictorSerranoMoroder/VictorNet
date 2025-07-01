@@ -10,9 +10,7 @@ namespace src::core::device
     , y_ {}
     , c_ {}
     {
-
     }
-
 
     CudaTensor::CudaTensor(std::uint8_t* values, std::uint32_t c, std::uint32_t x, std::uint32_t y)
     : CudaObject<CudaTensor, std::uint8_t> {values, c*x*y, sizeof(std::uint8_t)*c*x*y}

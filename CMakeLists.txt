@@ -12,15 +12,17 @@ enable_language(CUDA)
 
 # Sources
 set(SOURCES
-    src/MainApplication.cu       # Your main app
+    src/MainApplication.cpp       # Your main app
     src/core/device/CudaTensor.cpp # CudaTensor implementation (inherits from CudaObject header-only)
     src/core/Tensor.cpp           # Other CPP sources if any
     src/kernels/Conv3D.cu
+    src/tests/TestDeviceMemory.cu
 )
 set(CMAKE_CUDA_ARCHITECTURES 80)
 
 find_package(CUDA REQUIRED)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(VictorNet ${SOURCES})
 
 # Enable separable compilation for CUDA

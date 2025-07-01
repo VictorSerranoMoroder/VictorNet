@@ -1,15 +1,10 @@
 #pragma once
 
-#include <cstdint>
-
-#include <core/device/CudaTensor.hpp>
-#include <core/device/CudaObject.hpp>
+#include <core/Tensor.hpp>
 
 
 namespace src::kernels
 {
-    using namespace src::core::device;
-
     struct ConvolutionScalarData {
             std::size_t input_h;
             std::size_t input_w;
@@ -25,8 +20,7 @@ namespace src::kernels
             }
         };
     
-    void launch_conv3d_kernel(CudaObject<CudaTensor, std::uint8_t>& input, 
-                                CudaObject<CudaTensor, std::uint8_t>& output, 
-                                CudaObject<CudaTensor, std::uint8_t>& kernel, 
+    src::core::Tensor launch_conv3d_kernel(src::core::Tensor& input, 
+                                src::core::Tensor& kernel, 
                                 ConvolutionScalarData scalar);
 }

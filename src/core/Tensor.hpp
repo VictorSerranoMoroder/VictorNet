@@ -34,7 +34,7 @@ namespace src::core
         /// @param[in] data     Serialized data that represents a tensor
         /// @param[in] width    Tensor X
         /// @param[in] height   Tensor Y
-        Tensor(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels_ = RGB_CHANNELS);
+        Tensor(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
 
         
         // Default destructor
@@ -52,6 +52,9 @@ namespace src::core
         ///
         /// @param[in] fname    Name given to the new image file
         void print_to_image(const char* fname) const;
+
+        
+        void set_data(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
 
         /// @brief Getter function for tensor data
         ///

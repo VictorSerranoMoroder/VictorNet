@@ -38,14 +38,13 @@ namespace src::core
         }
     }
 
-    Tensor::Tensor(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels_)
+    Tensor::Tensor(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels)
     : data_{nullptr}
     , height_ {height}
     , width_{width}
-    , channels_{channels_}
+    , channels_{channels}
     {
-        data_ = std::unique_ptr<std::uint8_t[]>{new std::uint8_t[get_value_count()]};
-        std::memcpy(data_.get(), data, get_value_count());
+        set_data(data, height, width, channels);
     }
 
     Tensor::Tensor(const Tensor& r)
@@ -105,6 +104,23 @@ namespace src::core
         else 
         {
             std::cerr << "Failed to load image: " << stbi_failure_reason() << "\n";
+        }
+    }
+
+    void Tensor::set_data(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels)
+    {
+        if (data != nullptr)
+        {
+            height_ = height;
+            width_ = width;
+            channels_ = channels;
+
+            data_.reset(new std::uint8_t[get_value_count()]);
+            std::memcpy(data_.get(), data, get_value_count());
+        }
+        else 
+        {
+            std::cerr << "Illegal Operation, cannot copy null data" << "\n"; 
         }
     }
 
