@@ -2,7 +2,7 @@
 
 #include <core/Tensor.hpp>
 
-namespace src::tests
+namespace tests
 {
     struct ConvolutionScalarData {
         std::size_t input_h;
@@ -19,5 +19,5 @@ namespace src::tests
         }
     };
 
-    core::Tensor test_device_memory(core::Tensor in_tensor, ConvolutionScalarData scalar);
+    core::Tensor test_device_memory(const core::Tensor& in_tensor, ConvolutionScalarData scalar);
 }

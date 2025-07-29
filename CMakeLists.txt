@@ -13,7 +13,6 @@ enable_language(CUDA)
 # Sources
 set(SOURCES
     src/MainApplication.cpp       # Your main app
-    src/core/device/CudaTensor.cpp # CudaTensor implementation (inherits from CudaObject header-only)
     src/core/Tensor.cpp           # Other CPP sources if any
     src/kernels/Conv3D.cu
     src/tests/TestDeviceMemory.cu
@@ -23,6 +22,7 @@ set(CMAKE_CUDA_ARCHITECTURES 80)
 find_package(CUDA REQUIRED)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_compile_options(-expt-relaxed-constexpr)
 add_executable(VictorNet ${SOURCES})
 
 # Enable separable compilation for CUDA
@@ -36,8 +36,10 @@ target_include_directories(VictorNet PRIVATE
     src
 )
 
+
+
 # Link libraries if needed (e.g., TracyClient, CUDA libraries are linked automatically)
-#target_link_libraries(VictorNet PRIVATE TracyClient)
+#target_link_libraries(VictorNet PRIVATE Eigen3::Eigen)
 
 # Add compile definitions if needed
 #target_compile_definitions(VictorNet PRIVATE TRACY_ENABLE)

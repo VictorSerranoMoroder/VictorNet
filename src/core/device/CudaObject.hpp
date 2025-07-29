@@ -5,35 +5,36 @@
 #include <iostream>   
 #include <cuda_runtime.h>  
 
-namespace src::core::device
+#include <core/device/IDeviceStorable.hpp>
+
+namespace core::device
 {
-    template <class TClass, class TData, std::enable_if_t<std::is_trivially_copyable_v<TData>, bool> = true>
+    template <class TClass, class TData, std::enable_if_t<std::is_trivially_copyable_v<TData> 
+        && std::is_base_of_v<IDeviceStorable, TClass>, bool> = true>
     class CudaObject 
     {
         public:
 
         CudaObject(std::uint32_t count)
-        : host_data_ {nullptr}
+        : element_num_ {count} 
+        , host_data_ {nullptr}
         , device_data_ {nullptr}
         {
-            allocate_device_memory(sizeof(TData) * count);
+            host_data_ = new TData[element_num_];
+            allocate_device_memory(get_byte_size());
         }
     
-        CudaObject(TData* data, std::uint32_t count, std::uint64_t size)
-        : host_data_ {nullptr}
+        CudaObject(TData* data, std::uint32_t count)
+        : element_num_ {count} 
+        , host_data_ {data}
         , device_data_ {nullptr}
         {
-            host_data_ = new TData[count];
-            if (data)
-            {
-                std::memcpy(host_data_, data,  size);
-            }
-            allocate_device_memory(size);
+            allocate_device_memory(get_byte_size());
         }
     
         ~CudaObject()
         {
-            delete[] host_data_;
+            std::cout << "CudaObject destructor called" << std::endl;
             cudaFree(device_data_);
         }
     
@@ -59,11 +60,11 @@ namespace src::core::device
         {
             if (device_data_)
             {
-                safe_cudaMemcpy(device_data_, host_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::HostToDevice);
+                safe_cudaMemcpy(get_byte_size(), MemcpyType::HostToDevice);
             }
             else 
             {
-                allocate_device_memory(static_cast<TClass*>(this)->get_size());
+                allocate_device_memory(get_byte_size());
             }
         }
     
@@ -71,12 +72,12 @@ namespace src::core::device
         {
             if (host_data_)
             {
-                safe_cudaMemcpy(host_data_, device_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::DeviceToHost);
+                safe_cudaMemcpy(get_byte_size(), MemcpyType::DeviceToHost);
             }
             else 
             {
-                host_data_ = new TData[static_cast<TClass*>(this)->get_count()];
-                safe_cudaMemcpy(host_data_, device_data_, static_cast<TClass*>(this)->get_size(), MemcpyType::DeviceToHost);
+                host_data_ = new TData[element_num_];
+                safe_cudaMemcpy(get_byte_size(), MemcpyType::DeviceToHost);
             }
         }
     
@@ -87,7 +88,7 @@ namespace src::core::device
             safe_cudaMalloc(size);
             if (host_data_)
             {  
-                safe_cudaMemcpy(device_data_, host_data_, size, MemcpyType::HostToDevice);
+                safe_cudaMemcpy(size, MemcpyType::HostToDevice);
             }
         }
     
@@ -105,18 +106,18 @@ namespace src::core::device
             DeviceToHost
         };
 
-        void safe_cudaMemcpy(TData* dest, TData* orig, std::uint64_t size, MemcpyType type)
+        void safe_cudaMemcpy(std::uint64_t size, MemcpyType type)
         {
             cudaError_t err{};
             if (type == MemcpyType::HostToDevice)
             {
                 std::cout << "cudaMemcpyHostToDevice" << std::endl;
-                err = cudaMemcpy(dest, orig, size, cudaMemcpyHostToDevice);
+                err = cudaMemcpy(device_data_, host_data_, size, cudaMemcpyHostToDevice);
             }
             else 
             {
                 std::cout << "cudaMemcpyDeviceToHost" << std::endl;
-                err = cudaMemcpy(dest, orig, size, cudaMemcpyDeviceToHost);
+                err = cudaMemcpy(host_data_, device_data_, size, cudaMemcpyDeviceToHost);
             }
 
             if (err != cudaSuccess) {
@@ -136,6 +137,17 @@ namespace src::core::device
             }
         }
 
+        std::uint32_t get_byte_size()
+        {
+            return element_num_ * sizeof(TData);
+        }
+
+        TClass* get_derived()
+        {
+            return static_cast<TClass*>(*this);
+        }
+
+        std::uint32_t element_num_;
         TData* host_data_;
         TData* device_data_;
     };

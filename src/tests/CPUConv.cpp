@@ -9,7 +9,7 @@
 
 int main()
 {
-    std::uint8_t input[5 * 5 * 3] = {
+    float input[5 * 5 * 3] = {
         // Row 0
         1, 10,  5,   2, 20,  4,   3, 30,  3,   4, 40,  2,   5, 50,  1,
         // Row 1
@@ -22,7 +22,7 @@ int main()
         21, 30, 25,  22, 40, 24,  23, 50, 23,  24, 60, 22,  25, 70, 21
     };
 
-    std::uint8_t kernel[3 * 3 * 3] = {
+    float kernel[3 * 3 * 3] = {
         // Row 0
         0, 0, 0,   1, 1, 1,   0, 0, 0,
         // Row 1
@@ -47,7 +47,7 @@ int main()
         for (std::size_t c = 0; c < channels; ++c)
             kernel_sum[c] += kernel[(h * kernel_dim + w) * channels + c];
 
-    std::uint8_t output[output_dim*output_dim*channels];
+    float output[output_dim*output_dim*channels];
  
     for (std::size_t h = 0; h < output_dim; ++h) // For each row
     {
@@ -78,7 +78,7 @@ int main()
                         }
                     }
                 }
-                std::uint8_t normalized_val = static_cast<std::uint8_t>(255.0f * (sum - min_possible_val) / (max_possible_val - min_possible_val));
+                float normalized_val = static_cast<float>(255.0f * (sum - min_possible_val) / (max_possible_val - min_possible_val));
                 std::cout << "Raw value:" << sum << " Normalized value:" << (int)normalized_val << std::endl;
                 output[(h * output_dim + w) * channels + c] = normalized_val;
             }

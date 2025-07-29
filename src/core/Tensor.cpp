@@ -1,7 +1,9 @@
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
-#include <memory>
+
 #include <core/Tensor.hpp>
 //#include <external/tracy/public/tracy/Tracy.hpp>
 
@@ -12,11 +14,10 @@ extern "C" {
     #include "external/stb_image/stb_image_write.h"
 }
 
-namespace src::core
+namespace core
 {
     Tensor::Tensor(const char* fname)
     {
-        //ZoneScopedN("ParseImage");
         int width{}, height{}, channels{};
         stbi_info(fname, &width, &height, &channels);
         std::uint8_t* data = stbi_load(fname, &width, &height, &channels, composition_type::STBI_rgb);
@@ -27,8 +28,11 @@ namespace src::core
 
         if (data != nullptr) 
         {
-            data_ = std::unique_ptr<std::uint8_t[]>{new std::uint8_t[get_value_count()]};
-            std::memcpy(data_.get(), data, get_value_count());
+            data_ = new float[get_count()];
+            for (size_t i = 0; i < get_count(); ++i)
+            {
+                data_[i] = static_cast<float>(data[i]) / 255.0f;
+            }
 
             stbi_image_free(data); // correctly free stb-allocated memory
         }
@@ -38,7 +42,7 @@ namespace src::core
         }
     }
 
-    Tensor::Tensor(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels)
+    Tensor::Tensor(float* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels)
     : data_{nullptr}
     , height_ {height}
     , width_{width}
@@ -47,50 +51,13 @@ namespace src::core
         set_data(data, height, width, channels);
     }
 
-    Tensor::Tensor(const Tensor& r)
-    : data_ {}
-    , channels_ {r.channels_}
-    , height_ {r.height_}
-    , width_ {r.width_}
+    Tensor::Tensor(std::uint32_t height, std::uint32_t width, std::uint32_t channels)
+    : data_{nullptr}
+    , height_ {height}
+    , width_{width}
+    , channels_{channels}
     {
-        data_ = std::unique_ptr<std::uint8_t[]>{ new std::uint8_t[get_value_count()]};
-        std::memcpy(data_.get(), r.data_.get(), get_value_count());
-    }
-
-    Tensor& Tensor::operator=(const Tensor& r)
-    {
-        // Self-assignment guard
-        if (this == &r) return *this;
-
-        channels_ = r.channels_;
-        height_ = r.height_;
-        width_ = r.width_;
-        data_ = std::unique_ptr<std::uint8_t[]>{ new std::uint8_t[get_value_count()]};
-        std::memcpy(data_.get(), r.data_.get(), get_value_count());
-        return *this;
-    }
-
-    Tensor::Tensor(Tensor&& other) noexcept
-        : data_{std::move(other.data_)}
-        , channels_{other.channels_}
-        , height_{other.height_}
-        , width_{other.width_}
-    {
-        other.channels_ = other.height_ = other.width_ = 0;
-    }
-
-    Tensor& Tensor::operator=(Tensor&& other) noexcept
-    {
-        if (this == &other) return *this;
-
-        data_ = std::move(other.data_);
-        channels_ = other.channels_;
-        height_ = other.height_;
-        width_ = other.width_;
-
-        other.channels_ = other.height_ = other.width_ = 0;
-        
-        return *this;
+        data_ = new float[get_count()];
     }
 
     void Tensor::print_to_image(const char* fname) const
@@ -98,8 +65,15 @@ namespace src::core
         //ZoneScopedN("Print");
         if (data_ != nullptr)
         {
-            auto d = reinterpret_cast<std::uint8_t*>(data_.get());
-            stbi_write_jpg(fname, width_, height_, channels_, d, 100);
+            std::uint8_t* output = new std::uint8_t[get_count()];
+
+            for (std::size_t i = 0; i < get_count(); i++)
+            {
+                float val = std::clamp(data_[i], 0.0f, 1.0f);
+                output[i] = static_cast<std::uint8_t>(val * 255.0f);
+            }
+            std::cout << "Printing Image" << std::endl;
+            stbi_write_jpg(fname, width_, height_, channels_, output, 100);
         }
         else 
         {
@@ -107,7 +81,7 @@ namespace src::core
         }
     }
 
-    void Tensor::set_data(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels)
+    void Tensor::set_data(float* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels)
     {
         if (data != nullptr)
         {
@@ -115,8 +89,13 @@ namespace src::core
             width_ = width;
             channels_ = channels;
 
-            data_.reset(new std::uint8_t[get_value_count()]);
-            std::memcpy(data_.get(), data, get_value_count());
+            delete[] data_;
+
+            data_ = new float[get_count()];
+            for (size_t i = 0; i < get_count(); ++i)
+            {
+                data_[i] = static_cast<float>(data[i]) / 255.0f;
+            }
         }
         else 
         {
@@ -124,12 +103,17 @@ namespace src::core
         }
     }
 
-    std::uint8_t* Tensor::get_data() 
+    float* Tensor::get_data() const
     {
-        return data_.get();
+        return data_;
     }
 
-    std::uint32_t Tensor::get_value_count() const
+    std::uint32_t Tensor::get_size() const
+    {
+        return channels_ * width_ * height_ * sizeof(float);
+    }
+
+    std::uint32_t Tensor::get_count() const
     {
         return channels_ * width_ * height_;    
     }

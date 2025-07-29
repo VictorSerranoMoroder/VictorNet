@@ -1,24 +1,42 @@
+#include "core/device/DeviceTensor.hpp"
 #include <tests/TestDeviceMemory.hpp>
 
-#include <core/device/CudaTensor.hpp>
+#include <core/device/DeviceTensor.hpp>
 #include <core/Tensor.hpp>
+#include <iostream>
 
-namespace src::tests
+namespace tests
 {
 
-    __global__ void test_kernel(std::uint8_t* input)
+    __global__ void test_kernel(float* input, ConvolutionScalarData scalar)
     {
+        int w = blockIdx.x * blockDim.x + threadIdx.x;  // width
+        int h = blockIdx.y * blockDim.y + threadIdx.y;  // height
+        int c = blockIdx.z; // channel
 
+        // (HWC format)
+        int index = (h * scalar.input_w + w) * scalar.channels + c;
+        input[index] = input[index] * 0.5;
     }
 
-    core::Tensor test_device_memory(core::Tensor in_tensor, ConvolutionScalarData scalar)
+    core::Tensor test_device_memory(const core::Tensor& in_tensor, ConvolutionScalarData scalar)
     {
-        core::Tensor out_tensor{};
-        core::device::CudaTensor cu_t{in_tensor};
-        core::device::CudaTensor cu_output{in_tensor};
+        core::device::DeviceTensor cu_t{in_tensor};
 
-        out_tensor.set_data(cu_output.get_data(), cu_output.get_height(), cu_output.get_width()); 
+        int out_height = scalar.input_h;
+        int out_width  = scalar.input_w;
 
-        return out_tensor;
+        dim3 blockDim(16, 16);
+        dim3 gridDim((out_width + blockDim.x - 1) / blockDim.x,
+                    (out_height + blockDim.y - 1) / blockDim.y,
+                    scalar.channels);
+
+        std::cout << "Running Kernel" << std::endl;
+        test_kernel<<<gridDim,blockDim>>>(cu_t.get_device(), scalar);
+
+        cu_t.sync_to_host();
+
+        return *dynamic_cast<core::Tensor*>(&cu_t); 
+;
     }
 }

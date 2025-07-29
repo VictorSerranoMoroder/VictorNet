@@ -1,15 +1,16 @@
 
+#include <core/device/CudaObject.hpp>
 #include <kernels/Conv3D.hpp>
 
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 
-#include <core/device/CudaTensor.hpp>
+#include <core/device/DeviceTensor.hpp>
 
-namespace src::kernels
+namespace kernels
 {
-    __global__ void image_convolution(std::uint8_t* input, std::uint8_t* output, std::uint8_t* kernel, 
+    __global__ void image_convolution(float* input, float* output, float* kernel, 
                                     ConvolutionScalarData scalar)
     {
         int w = blockIdx.x * blockDim.x + threadIdx.x;  // width
@@ -26,6 +27,9 @@ namespace src::kernels
 
         const std::size_t output_dim = ((input_h + 2*padding - dilation * (kernel_dim-1)-1)/stride)+1;
     
+        //Check if thread is out of bounds
+        if (w >= scalar.get_output_width() || h >= scalar.get_output_height() || c >= channels) return;
+
         float kernel_sum{};
         for (std::size_t kh = 0; kh < kernel_dim; ++kh)
         {
@@ -62,24 +66,27 @@ namespace src::kernels
         }
         if (w < output_dim && h < output_dim && c < channels)
         {
-            std::uint8_t normalized_val = static_cast<std::uint8_t>(255.0f * (sum - min_possible_val) / (max_possible_val - min_possible_val));
-            std::size_t out_idx = (h * output_dim * channels) + (w * channels) + c;
-            output[out_idx] = normalized_val;
+            //float normalized_val = static_cast<float>(255.0f * (sum - min_possible_val) / (max_possible_val - min_possible_val));
+            std::size_t out_idx = (h * scalar.get_output_width() + w) * channels + c;
+            float gain = 25.0f;
+            output[out_idx] = min(max(sum * gain, 0.0f), 255.0f);
         }
     }
 
-    __host__ src::core::Tensor launch_conv3d_kernel(
-            src::core::Tensor& input, 
-            src::core::Tensor& kernel, 
+    __host__ core::Tensor launch_conv3d_kernel(
+            const core::Tensor& input, 
+            const core::Tensor& kernel, 
             ConvolutionScalarData scalar
         )
     {
-        core::device::CudaTensor cu_input{input};
-        core::device::CudaTensor cu_output{scalar.get_output_dim() * scalar.get_output_dim() * scalar.channels};
-        core::device::CudaTensor cu_kernel{kernel};
-
-        int out_height = scalar.input_h - scalar.kernel_dim + 1;
-        int out_width  = scalar.input_w - scalar.kernel_dim + 1;
+        core::device::DeviceTensor cu_input{input};
+        core::device::DeviceTensor cu_kernel{kernel};
+        
+        int out_height = scalar.get_output_height();
+        int out_width  = scalar.get_output_width();
+        
+        core::Tensor out_tensor{out_height, out_width, scalar.channels};
+        core::device::DeviceTensor cu_output{out_tensor};
 
         dim3 blockDim(16, 16);
         dim3 gridDim((out_width + blockDim.x - 1) / blockDim.x,
@@ -95,6 +102,7 @@ namespace src::kernels
         }
 
         image_convolution<<<gridDim, blockDim>>>(cu_input.get_device(), cu_output.get_device(), cu_kernel.get_device(), scalar);
+
         cudaError_t err = cudaGetLastError();
         if (err != cudaSuccess) 
         {
@@ -110,11 +118,8 @@ namespace src::kernels
 
         cu_output.sync_to_host();
 
-        core::Tensor output{
-            cu_output.get_data(),
-            static_cast<uint32_t>(scalar.get_output_dim()), 
-            static_cast<uint32_t>(scalar.get_output_dim()), scalar.channels};
-        return output;
+        auto ret = *dynamic_cast<core::Tensor*>(&cu_output);
+        return ret;
     }
 }
 

@@ -1,9 +1,10 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 
-namespace src::core
+#include <core/device/IDeviceStorable.hpp>
+
+namespace core
 {
     /// @brief
     constexpr std::uint32_t RGB_CHANNELS = 3;
@@ -19,10 +20,10 @@ namespace src::core
     /// @brief
     ///
     /// @details
-    class Tensor
+    class Tensor : public core::device::IDeviceStorable
     {
         public:
-        Tensor() = default;
+        Tensor() = delete;
 
         /// @brief Image serializer constructor
         ///
@@ -34,15 +35,17 @@ namespace src::core
         /// @param[in] data     Serialized data that represents a tensor
         /// @param[in] width    Tensor X
         /// @param[in] height   Tensor Y
-        Tensor(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
+        Tensor(float* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
 
         
+        Tensor(std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
+
         // Default destructor
         ~Tensor() = default;
         
         // Copyable
-        Tensor(const Tensor&);
-        Tensor& operator=(const Tensor&);
+        Tensor(const Tensor&) = default;
+        Tensor& operator=(const Tensor&) = default;
         
         // Movable
         Tensor(Tensor&& other) noexcept;
@@ -53,20 +56,15 @@ namespace src::core
         /// @param[in] fname    Name given to the new image file
         void print_to_image(const char* fname) const;
 
-        
-        void set_data(std::uint8_t* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
-
-        /// @brief Getter function for tensor data
+        /// @brief Getter function for tensor element size
         ///
-        /// @warning This function should ONLY be used with measure as it breaks ptr ownership of std::unique_ptr
-        ///
-        /// @return     Tensor data values
-        std::uint8_t* get_data();
+        /// @return     Number of bytes that are stored
+        virtual std::uint32_t get_size() const override;
 
-        /// @brief Getter function for tensor value count
+        /// @brief Getter function for tensor element count
         ///
         /// @return     Number of elements that form the tensor
-        std::uint32_t get_value_count() const;
+        virtual std::uint32_t get_count() const override;
 
         /// @brief Getter function of width
         ///
@@ -83,9 +81,18 @@ namespace src::core
         /// @return     channel value
         std::uint32_t get_channels() const;
 
-        private:
+        void set_data(float* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
 
-        std::unique_ptr<std::uint8_t[]> data_;
+        /// @brief Getter function for tensor data
+        ///
+        /// @return     Tensor data values
+        virtual float* get_data() const override;
+
+        protected:
+
+
+        private:
+        float* data_;
         std::uint32_t width_;
         std::uint32_t height_;
         std::uint32_t channels_;
