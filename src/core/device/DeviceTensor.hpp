@@ -1,27 +1,42 @@
 #pragma once
 
+#include <core/Tensor.hpp>
+#include <core/device/CudaObject.hpp>
 
-#include "core/Tensor.hpp"
-#include "core/device/CudaObject.hpp"
 namespace core::device {
     /// @brief
     ///
     /// @details
-    class DeviceTensor : public core::Tensor, public CudaObject<core::Tensor, float>
+    class DeviceTensor
     {
         public:
         DeviceTensor(const core::Tensor& tensor)
-        : core::Tensor{tensor}
-        , core::device::CudaObject<core::Tensor, float>{tensor.get_data(), tensor.get_count()}
+        : tensor_{tensor}
+        , cuda_tensor_ {tensor.get_data().get(), tensor.get_count()}
         {
         }
-    
-        // Copyable
-        DeviceTensor(const DeviceTensor&) = default;
-        DeviceTensor& operator=(const DeviceTensor&) = default;
+
+        // Not Copyable
+        DeviceTensor(const DeviceTensor&) = delete;
+        DeviceTensor& operator=(const DeviceTensor&) = delete;
 
         // Movable
         DeviceTensor(DeviceTensor&&) = default;
         DeviceTensor& operator=(DeviceTensor&&) = default;
+
+        const core::Tensor& get_tensor()
+        {
+            return tensor_;
+        }
+
+        CudaObject<float>& get_cuda_tensor()
+        {
+            return cuda_tensor_;
+        }
+
+        private:
+
+        core::Tensor tensor_;
+        CudaObject<float> cuda_tensor_;
     };
 }

@@ -32,10 +32,10 @@ namespace tests
                     scalar.channels);
 
         std::cout << "Running Kernel" << std::endl;
-        test_kernel<<<gridDim,blockDim>>>(cu_t.get_device(), scalar);
+        test_kernel<<<gridDim,blockDim>>>(cu_t.get_cuda_tensor().get_device(), scalar);
 
-        cu_t.sync_to_host();
+        cu_t.get_cuda_tensor().sync_to_host();
 
-        return *dynamic_cast<core::Tensor*>(&cu_t);
+        return cu_t.get_tensor();
     }
 }

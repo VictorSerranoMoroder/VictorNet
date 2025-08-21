@@ -28,10 +28,10 @@ namespace core
 
         if (data != nullptr) 
         {
-            data_ = new float[get_count()];
+            data_.reset(new float[get_count()]);
             for (size_t i = 0; i < get_count(); ++i)
             {
-                data_[i] = static_cast<float>(data[i]) / 255.0f;
+                data_.get()[i] = static_cast<float>(data[i]) / 255.0f;
             }
 
             stbi_image_free(data); // correctly free stb-allocated memory
@@ -57,7 +57,7 @@ namespace core
     , width_{width}
     , channels_{channels}
     {
-        data_ = new float[get_count()];
+        data_.reset(new float[get_count()]);
     }
 
     void Tensor::print_to_image(const char* fname) const
@@ -69,7 +69,7 @@ namespace core
 
             for (std::size_t i = 0; i < get_count(); i++)
             {
-                float val = std::clamp(data_[i], 0.0f, 1.0f);
+                float val = std::clamp(data_.get()[i], 0.0f, 1.0f);
                 output[i] = static_cast<std::uint8_t>(val * 255.0f);
             }
             std::cout << "Printing Image" << std::endl;
@@ -89,12 +89,10 @@ namespace core
             width_ = width;
             channels_ = channels;
 
-            delete[] data_;
-
-            data_ = new float[get_count()];
+            data_.reset(new float[get_count()]);
             for (size_t i = 0; i < get_count(); ++i)
             {
-                data_[i] = static_cast<float>(data[i]) / 255.0f;
+                data_.get()[i] = static_cast<float>(data[i]) / 255.0f;
             }
         }
         else 
@@ -103,7 +101,7 @@ namespace core
         }
     }
 
-    float* Tensor::get_data() const
+    std::shared_ptr<float> Tensor::get_data() const
     {
         return data_;
     }

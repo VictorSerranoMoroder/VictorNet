@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include <core/device/IDeviceStorable.hpp>
 
@@ -48,8 +49,8 @@ namespace core
         Tensor& operator=(const Tensor&) = default;
         
         // Movable
-        Tensor(Tensor&& other) noexcept;
-        Tensor& operator=(Tensor&&) noexcept;
+        Tensor(Tensor&& other) = default;
+        Tensor& operator=(Tensor&&) = default;
 
         /// @brief Generates an image from tensor internal data values
         ///
@@ -86,13 +87,10 @@ namespace core
         /// @brief Getter function for tensor data
         ///
         /// @return     Tensor data values
-        virtual float* get_data() const override;
-
-        protected:
-
+        virtual std::shared_ptr<float> get_data() const override;
 
         private:
-        float* data_;
+        std::shared_ptr<float> data_;
         std::uint32_t width_;
         std::uint32_t height_;
         std::uint32_t channels_;

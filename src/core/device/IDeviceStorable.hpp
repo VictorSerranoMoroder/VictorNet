@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 namespace core::device {
     /// @brief
@@ -19,9 +20,9 @@ namespace core::device {
         IDeviceStorable(IDeviceStorable&&) = default;
         IDeviceStorable& operator=(IDeviceStorable&&) = default;
 
-        virtual float* get_data() const = 0;
+        virtual std::shared_ptr<float> get_data() const = 0;
 
-        protected:
+        public:
         virtual std::uint32_t get_size() const = 0;
         virtual std::uint32_t get_count() const = 0;
     };

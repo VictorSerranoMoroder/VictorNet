@@ -10,7 +10,7 @@
 
 namespace kernels
 {
-    __global__ void image_convolution(float* input, float* output, float* kernel, 
+    __global__ void image_convolution(float* input, float* output, float* kernel,
                                     ConvolutionScalarData scalar)
     {
         int w = blockIdx.x * blockDim.x + threadIdx.x;  // width
@@ -26,7 +26,7 @@ namespace kernels
         const std::size_t stride = scalar.stride;
 
         const std::size_t output_dim = ((input_h + 2*padding - dilation * (kernel_dim-1)-1)/stride)+1;
-    
+
         //Check if thread is out of bounds
         if (w >= scalar.get_output_width() || h >= scalar.get_output_height() || c >= channels) return;
 
@@ -49,9 +49,9 @@ namespace kernels
         {
             for (std::size_t kernel_w = 0; kernel_w < kernel_dim; ++kernel_w) // For each kernel value
             {
-                int current_h = h * stride + kernel_h * dilation - padding; // Compute the corresponding input row 
-                int current_w = w * stride + kernel_w * dilation - padding; // Compute the corresponding input column 
-                
+                int current_h = h * stride + kernel_h * dilation - padding; // Compute the corresponding input row
+                int current_w = w * stride + kernel_w * dilation - padding; // Compute the corresponding input column
+
                 // Bounds check to avoid out-of-bounds memory access.
                 if (current_h >= 0 && current_h < input_h && current_w >= 0 && current_w < (int)input_w)
                 {
@@ -74,17 +74,17 @@ namespace kernels
     }
 
     __host__ core::Tensor launch_conv3d_kernel(
-            const core::Tensor& input, 
-            const core::Tensor& kernel, 
+            const core::Tensor& input,
+            const core::Tensor& kernel,
             ConvolutionScalarData scalar
         )
     {
         core::device::DeviceTensor cu_input{input};
         core::device::DeviceTensor cu_kernel{kernel};
-        
+
         int out_height = scalar.get_output_height();
         int out_width  = scalar.get_output_width();
-        
+
         core::Tensor out_tensor{out_height, out_width, scalar.channels};
         core::device::DeviceTensor cu_output{out_tensor};
 
@@ -101,25 +101,24 @@ namespace kernels
             std::exit(EXIT_FAILURE);
         }
 
-        image_convolution<<<gridDim, blockDim>>>(cu_input.get_device(), cu_output.get_device(), cu_kernel.get_device(), scalar);
+        image_convolution<<<gridDim, blockDim>>>(cu_input.get_cuda_tensor().get_device(), cu_output.get_cuda_tensor().get_device(), cu_kernel.get_cuda_tensor().get_device(), scalar);
 
         cudaError_t err = cudaGetLastError();
-        if (err != cudaSuccess) 
+        if (err != cudaSuccess)
         {
             std::cerr << "Kernel launch error: " << cudaGetErrorString(err) << "\n";
             std::exit(EXIT_FAILURE);
         }
-        
+
         cudaError_t sync_err = cudaDeviceSynchronize();
         if (sync_err != cudaSuccess) {
             std::cerr << "CUDA sync error: " << cudaGetErrorString(sync_err) << "\n";
             std::exit(EXIT_FAILURE);
         }
 
-        cu_output.sync_to_host();
+        cu_output.get_cuda_tensor().sync_to_host();
 
-        auto ret = *dynamic_cast<core::Tensor*>(&cu_output);
-        return ret;
+        return cu_output.get_tensor();
     }
 }
 
