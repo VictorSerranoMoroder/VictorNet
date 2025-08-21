@@ -14,15 +14,6 @@ namespace core::device
     class CudaObject 
     {
         public:
-
-        CudaObject(std::uint32_t count)
-        : element_num_ {count} 
-        , host_data_ {nullptr}
-        , device_data_ {nullptr}
-        {
-            host_data_ = new TData[element_num_];
-            allocate_device_memory(get_byte_size());
-        }
     
         CudaObject(TData* data, std::uint32_t count)
         : element_num_ {count} 

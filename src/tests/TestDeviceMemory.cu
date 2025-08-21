@@ -36,7 +36,6 @@ namespace tests
 
         cu_t.sync_to_host();
 
-        return *dynamic_cast<core::Tensor*>(&cu_t); 
-;
+        return *dynamic_cast<core::Tensor*>(&cu_t);
     }
 }

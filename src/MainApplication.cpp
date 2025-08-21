@@ -51,7 +51,7 @@ void testB()
 
 int main()
 {
-    testA();
+    //testA();
     testB();
 
     return 0;
