@@ -3,7 +3,6 @@
 #include <kernels/Conv3D.hpp>
 
 #include <cstddef>
-#include <cstdint>
 #include <iostream>
 
 #include <core/device/DeviceTensor.hpp>
