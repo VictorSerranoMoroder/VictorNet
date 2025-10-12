@@ -6,7 +6,6 @@
 
 namespace cnn
 {
-
     struct ConvolutionalLayerSettings
     {
         std::uint32_t kernel_dim;
@@ -15,7 +14,6 @@ namespace cnn
         std::uint32_t dilation = 1;
         std::uint32_t padding = 0;
     };
-
 
     /// @brief
     ///

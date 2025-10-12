@@ -1,6 +1,9 @@
-#include "cnn/ConvolutionalLayer.hpp"
+#include <cnn/ConvolutionalLayer.hpp>
+#include <iostream>
+#include <kernels/MaxPooling.hpp>
 #include <core/Tensor.hpp>
 #include <sstream>
+
 #include <tests/TestDeviceMemory.hpp>
 #include <kernels/Conv3D.hpp>
 
@@ -53,13 +56,25 @@ void testC()
 {
     core::Tensor tensor_in{"/workspaces/VictorNet/data/toyota-corolla.jpg"};
     tensor_in.print_to_image("ImageTest.jpg");
-    const auto ret = cnn::ConvolutionalLayer{cnn::ConvolutionalLayerSettings{55}, 24000}.perform_convolution(tensor_in);
-    return;
-    for (std::size_t i{}; i < ret.size(); i++)
+    const auto conv1 =
+        cnn::ConvolutionalLayer{
+            cnn::ConvolutionalLayerSettings{11}
+            , 96}.perform_convolution(tensor_in);
+
+    for (std::size_t i{}; i < conv1.size(); i++)
     {
         std::ostringstream name;
-        name << "Output" << (i + 1) << ".jpg";
-        ret.at(i).print_to_image(name.str().c_str());
+
+        auto res =
+            kernels::launch_maxpooling_kernel(
+                conv1.at(i)
+                , kernels::MaxPoolingScalarData{
+                    conv1.at(i).get_height()
+                    , conv1.at(i).get_width()
+                    , 4});
+
+        name << "Out" << (i + 1) << ".jpg";
+        res.print_to_image(name.str().c_str());
     }
 }
 

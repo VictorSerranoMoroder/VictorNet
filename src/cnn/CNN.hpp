@@ -1,5 +1,8 @@
 #pragma once
 
+#include <list>
+
+#include <cnn/ConvolutionalLayer.hpp>
 namespace cnn
 {
     /// @brief
@@ -19,5 +22,6 @@ namespace cnn
         CNN& operator=(CNN&&) = delete;
 
         private:
+        std::list<ConvolutionalLayer> convolution_layers_;
     };
 }

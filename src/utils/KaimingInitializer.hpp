@@ -39,11 +39,11 @@ namespace utils
 
         virtual core::Tensor initialize_weights(std::size_t dimension) override
         {
-            std::vector<float> out(dimension);
+            std::size_t fan_in = 3 * dimension * dimension;
+            float stddev = std::sqrt(2.0f / static_cast<float>(fan_in));
 
-            float stddev = std::sqrt(2.0f / dimension*dimension*3);
-            init_rgb_normal(out);
-
+            std::vector<float> out(3*3*dimension*dimension);
+            init_rgb_normal(out, stddev);
             return core::Tensor{out,
                 static_cast<std::uint32_t>(dimension),
                 static_cast<std::uint32_t>(dimension)};
@@ -53,12 +53,11 @@ namespace utils
 
         void init_rgb_normal(std::vector<float>& weights, float stddev = 0.01f)
         {
-            std::mt19937 gen(42);  // fixed seed for reproducibility
             std::normal_distribution<float> dist(0.0f, stddev);
 
             for (auto& value : weights)
             {
-                value = dist(gen);
+                value = dist(random_generator_);
             }
         }
     };

@@ -1,6 +1,8 @@
 #pragma once
 
-#include "core/Tensor.hpp"
+#include <random>
+
+#include <core/Tensor.hpp>
 namespace utils
 {
     /// @brief
@@ -20,5 +22,8 @@ namespace utils
         IKernelWeightProvider& operator=(IKernelWeightProvider&&) = default;
 
         virtual core::Tensor initialize_weights(std::size_t dimension) = 0;
+
+        protected:
+        std::mt19937 random_generator_{std::random_device{}()};
     };
 }

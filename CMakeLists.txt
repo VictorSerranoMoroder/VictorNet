@@ -17,6 +17,7 @@ set(SOURCES
     src/MainApplication.cpp
     src/core/Tensor.cpp
     src/kernels/Conv3D.cu
+    src/kernels/MaxPooling.cu
     src/tests/TestDeviceMemory.cu
 )
 set(CMAKE_CUDA_ARCHITECTURES 80)

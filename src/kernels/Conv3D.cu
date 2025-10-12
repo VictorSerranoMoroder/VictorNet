@@ -12,9 +12,9 @@ namespace kernels
     __global__ void image_convolution(float* input, float* output, float* kernel,
                                     ConvolutionScalarData scalar)
     {
-        int w = blockIdx.x * blockDim.x + threadIdx.x;  // width
-        int h = blockIdx.y * blockDim.y + threadIdx.y;  // height
-        int c = blockIdx.z; // channel
+        const int w = blockIdx.x * blockDim.x + threadIdx.x;  // width
+        const int h = blockIdx.y * blockDim.y + threadIdx.y;  // height
+        const int c = blockIdx.z; // channel
 
         const std::size_t input_h = scalar.input_h;
         const std::size_t input_w = scalar.input_w;
@@ -67,7 +67,7 @@ namespace kernels
         {
             //float normalized_val = static_cast<float>(255.0f * (sum - min_possible_val) / (max_possible_val - min_possible_val));
             std::size_t out_idx = (h * scalar.get_output_width() + w) * channels + c;
-            float gain = 25.0f;
+            float gain = 1.0f;
             output[out_idx] = min(max(sum * gain, 0.0f), 255.0f);
         }
     }
@@ -109,12 +109,13 @@ namespace kernels
             std::exit(EXIT_FAILURE);
         }
 
+        /*
         cudaError_t sync_err = cudaDeviceSynchronize();
         if (sync_err != cudaSuccess) {
             std::cerr << "CUDA sync error: " << cudaGetErrorString(sync_err) << "\n";
             std::exit(EXIT_FAILURE);
         }
-
+        */
         cu_output.get_cuda_tensor().sync_to_host();
 
         return cu_output.get_tensor();

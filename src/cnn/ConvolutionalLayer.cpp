@@ -22,14 +22,13 @@ namespace cnn
                 return utils::KaimingInitializer{}.initialize_weights(settings.kernel_dim);
             }
         );
-        /*
-        for (std::size_t i{}; i < kernel_list_.size(); i++)
+
+        for (std::size_t i{}; i < kernel_num; i++)
         {
             std::ostringstream name{};
             name << "Kernel" << (i + 1) << ".jpg";
             kernel_list_.at(i).print_to_image(name.str().c_str());
         }
-        */
     }
 
     std::vector<core::Tensor> ConvolutionalLayer::perform_convolution(const core::Tensor& input)
