@@ -12,8 +12,10 @@ enable_language(CUDA)
 
 # Sources
 set(SOURCES
-    src/MainApplication.cpp       # Your main app
-    src/core/Tensor.cpp           # Other CPP sources if any
+    src/cnn/CNN.cpp
+    src/cnn/ConvolutionalLayer.cpp
+    src/MainApplication.cpp
+    src/core/Tensor.cpp
     src/kernels/Conv3D.cu
     src/tests/TestDeviceMemory.cu
 )

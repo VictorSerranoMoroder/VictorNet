@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <core/device/IDeviceStorable.hpp>
+#include <vector>
 
 namespace core
 {
@@ -24,7 +25,7 @@ namespace core
     class Tensor : public core::device::IDeviceStorable
     {
         public:
-        Tensor() = delete;
+        Tensor() = default;
 
         /// @brief Image serializer constructor
         ///
@@ -38,16 +39,23 @@ namespace core
         /// @param[in] height   Tensor Y
         Tensor(float* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
 
-        
+        /// @brief 3D Tensor constructor
+        ///
+        /// @param[in] data     Ownership adquisition of a vector of serialized data that represents a tensor
+        /// @param[in] width    Tensor X
+        /// @param[in] height   Tensor Y
+        Tensor(std::vector<float>& data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
+
+
         Tensor(std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
 
         // Default destructor
         ~Tensor() = default;
-        
+
         // Copyable
         Tensor(const Tensor&) = default;
         Tensor& operator=(const Tensor&) = default;
-        
+
         // Movable
         Tensor(Tensor&& other) = default;
         Tensor& operator=(Tensor&&) = default;
@@ -82,7 +90,7 @@ namespace core
         /// @return     channel value
         std::uint32_t get_channels() const;
 
-        void set_data(float* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS);
+        void set_data(float* data, std::uint32_t height, std::uint32_t width, std::uint32_t channels = RGB_CHANNELS, bool normalize = false);
 
         /// @brief Getter function for tensor data
         ///
