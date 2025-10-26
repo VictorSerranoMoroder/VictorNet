@@ -13,7 +13,8 @@ enable_language(CUDA)
 # Sources
 set(SOURCES
     src/cnn/CNN.cpp
-    src/cnn/ConvolutionalLayer.cpp
+    src/cnn/layers/ConvolutionalLayer.cpp
+    src/cnn/layers/MaxPoolingLayer.cpp
     src/MainApplication.cpp
     src/core/Tensor.cpp
     src/kernels/Conv3D.cu

@@ -26,8 +26,8 @@ namespace kernels
         {
             for (std::size_t pw = 0; pw < scalar.pool_size; ++pw)
             {
-                int in_h = out_h * scalar.pool_size + ph;
-                int in_w = out_w * scalar.pool_size + pw;
+                int in_h = out_h * scalar.stride + ph;
+                int in_w = out_w * scalar.stride + pw;
 
                 if (in_h < scalar.input_h && in_w < scalar.input_w)
                 {

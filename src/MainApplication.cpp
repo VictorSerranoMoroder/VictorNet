@@ -1,4 +1,5 @@
-#include <cnn/ConvolutionalLayer.hpp>
+#include <cnn/layers/ConvolutionalLayer.hpp>
+#include <cnn/CNN.hpp>
 #include <iostream>
 #include <kernels/MaxPooling.hpp>
 #include <core/Tensor.hpp>
@@ -56,26 +57,13 @@ void testC()
 {
     core::Tensor tensor_in{"/workspaces/VictorNet/data/toyota-corolla.jpg"};
     tensor_in.print_to_image("ImageTest.jpg");
-    const auto conv1 =
-        cnn::ConvolutionalLayer{
-            cnn::ConvolutionalLayerSettings{11}
-            , 96}.perform_convolution(tensor_in);
 
-    for (std::size_t i{}; i < conv1.size(); i++)
-    {
-        std::ostringstream name;
+    cnn::CNN VictorNet{};
 
-        auto res =
-            kernels::launch_maxpooling_kernel(
-                conv1.at(i)
-                , kernels::MaxPoolingScalarData{
-                    conv1.at(i).get_height()
-                    , conv1.at(i).get_width()
-                    , 4});
-
-        name << "Out" << (i + 1) << ".jpg";
-        res.print_to_image(name.str().c_str());
-    }
+    VictorNet
+        << VictorNet.add_conv_layer(11,2,96)
+        << VictorNet.add_max_pooling_layer(3, 4)
+        << VictorNet.run_from(tensor_in);
 }
 
 int main()

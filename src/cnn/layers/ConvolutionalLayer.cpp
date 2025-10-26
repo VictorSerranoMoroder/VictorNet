@@ -1,17 +1,21 @@
 
+#include "kernels/MaxPooling.hpp"
 #include "utils/KaimingInitializer.hpp"
 #include <kernels/Conv3D.hpp>
 #include <algorithm>
 
-#include <cnn/ConvolutionalLayer.hpp>
+#include <cnn/layers/ConvolutionalLayer.hpp>
 #include <core/Tensor.hpp>
 
 #include <sstream>
+#include <utility>
+#include <vector>
 
-namespace cnn
+namespace cnn::layers
 {
     ConvolutionalLayer::ConvolutionalLayer(const ConvolutionalLayerSettings& settings, std::size_t kernel_num)
-    : settings_ {settings}
+    : BaseLayer{}
+    , settings_ {settings}
     , kernel_list_{kernel_num}
     {
         std::generate(
@@ -31,14 +35,22 @@ namespace cnn
         }
     }
 
-    std::vector<core::Tensor> ConvolutionalLayer::perform_convolution(const core::Tensor& input)
+    std::vector<core::Tensor> ConvolutionalLayer::run_layer(std::vector<core::Tensor>&& input)
     {
-        std::vector<core::Tensor> activation_map{};
-        activation_map.reserve(kernel_list_.size());
+        for (auto&& map : input)
+        {
+            perform_convolution(std::forward<core::Tensor>(map));
+        }
+        return activation_map_list_;
+    }
+
+    void ConvolutionalLayer::perform_convolution(core::Tensor&& input)
+    {
+        activation_map_list_.reserve(kernel_list_.size());
 
         for (const auto& kernel : kernel_list_)
         {
-            activation_map.emplace_back(kernels::launch_conv3d_kernel(input, kernel,
+            activation_map_list_.emplace_back(kernels::launch_conv3d_kernel(input, kernel,
                 {
                     input.get_height(),
                     input.get_width(),
@@ -49,8 +61,5 @@ namespace cnn
                     settings_.padding
                 }));
         }
-
-        return activation_map;
     }
-
 }
