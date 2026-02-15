@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+
+set(CUDA_DRIVER_LIBRARY "/run/opengl-driver/lib/libcuda.so")
 
 enable_language(CUDA)
 
@@ -21,9 +22,7 @@ set(SOURCES
     src/kernels/MaxPooling.cu
     src/tests/TestDeviceMemory.cu
 )
-set(CMAKE_CUDA_ARCHITECTURES 80)
-
-find_package(CUDA REQUIRED)
+set(CMAKE_CUDA_ARCHITECTURES native)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-expt-relaxed-constexpr)
@@ -40,7 +39,7 @@ target_include_directories(VictorNet PRIVATE
     src
 )
 
-
+target_link_libraries(VictorNet PRIVATE ${CUDA_DRIVER_LIBRARY})
 
 # Link libraries if needed (e.g., TracyClient, CUDA libraries are linked automatically)
 #target_link_libraries(VictorNet PRIVATE Eigen3::Eigen)
